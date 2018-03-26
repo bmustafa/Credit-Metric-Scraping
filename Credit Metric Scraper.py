@@ -4,6 +4,22 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 
+def isNegative(inputList):
+    """Returns true if any number in a list is negative"""
+    for item in inputList:
+        try:
+            if item < 0:
+                return True
+            # go through items in list and
+            # return true if any item is less than zero
+
+        except:
+            pass
+        # exception in case it is a string
+
+    return False
+    # Else do nothing and if no item in list is less than zero, return false
+
 stock_list = []
 AltmanScores = []
 InterestCoverageScores = []
@@ -107,8 +123,14 @@ for ticker in stock_list:
     try:
         InterestCoverageScore = float(stringConstructor)
     except:
-        InterestCoverageScore = "Negative Value"
+        if stringConstructor == "At":
+            InterestCoverageScore = "Negative Value (Company at a loss)"
+        elif stringConstructor == "No":
+            InterestCoverageScore = "No Debt, Value is Zero"
+        else:
+            print("Error. Anomalous result for" + ticker)
     # exception for if the interest coverage is negative (company incurs loss)
+    # of if the company has no debt
 
     InterestCoverageScores.append((ticker, InterestCoverageScore))
 print()
@@ -147,16 +169,9 @@ for ticker in stock_list:
                 break
     # find the Debt to ebitda ratio
 
-    try:
-        DebtEBITDAScore = float(stringConstructor)
-    except:
-        DebtEBITDAScore = "No Debt"
-    # exception if no debt
+    DebtEBITDAScore = float(stringConstructor)
 
-    if DebtEBITDAScore == "No Debt":
-        DebtEBITDAScores.append((ticker, 0))
-    else:
-        DebtEBITDAScores.append((ticker, DebtEBITDAScore))
+    DebtEBITDAScores.append((ticker, DebtEBITDAScore))
     # add ratio to list to store
 
 print()
@@ -210,7 +225,8 @@ for i in range(len(AltmanScores)):
     graphing_list.append((AltmanScores[i][1], InterestCoverageScores[i][1], \
                           DebtEBITDAScores[i][1]))
     Altman_score.append(AltmanScores[i][1])
-    if InterestCoverageScores[i][1] == "Negative Value":
+    if InterestCoverageScores[i][1] == "Negative Value (Company at a loss)"\
+            or InterestCoverageScores[i][1] == "No Debt, Value is Zero":
         IntCov.append(0)
     else:
         IntCov.append(InterestCoverageScores[i][1])
@@ -218,31 +234,61 @@ for i in range(len(AltmanScores)):
     D_Asset.append(DebtAssetScores[i][1])
 # creation of lists for the purpose of graphing
 
-fig = plt.figure()
-xpos = np.arange(len(stock_list))
-plt.xticks(xpos, stock_list)
-ax1 = fig.add_subplot(111)
-ax2 = ax1.twinx()
-ax1.bar(xpos, Altman_score,width = 0.2, color = 'r', label = "Altman Z-Score")
-ax1.bar(xpos+0.2, IntCov, width = 0.2, color = 'b', label = "Interest Coverage")
-ax2.bar(xpos-0.2, D_EBITDA, width = 0.2, color = 'g', label = "Debt To EBITDA")
-ax2.bar(xpos-0.4, D_Asset, width = 0.2, color = 'y', label = "Debt To Asset")
-# Create a 2 axis bar graph
+if isNegative(D_EBITDA):
+    # plotting format for if there is a negative EBITDA resulting in a neg
+    # debt to EBITDA
 
-low1 = min(Altman_score)
-high1 = max(Altman_score)
-low2 = min(D_EBITDA)
-high2 = max(D_EBITDA)
-ax1.set_ylim([math.ceil(low1-0.5*(high1-low1)),\
-              math.ceil(high1+0.5*(high1-low1))])
-# Scale the y axis
+    fig1 = plt.figure()
+    xpos = np.arange(len(stock_list))
+    plt.xticks(xpos, stock_list)
+    ax1 = fig1.add_subplot(111)
+    ax2 = ax1.twinx()
+    ax1.bar(xpos, Altman_score, width=0.2, color='r', label="Altman Z-Score")
+    ax2.bar(xpos + 0.2, IntCov, width=0.2, color='b', label="Interest Coverage")
+    ax1.bar(xpos - 0.2, D_Asset, width=0.2, color='y', label="Debt To Asset")
+    ax1.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, \
+               ncol=2, mode="expand", borderaxespad=0)
+    ax2.legend(bbox_to_anchor=(0., 1.07, 1., .102), loc=6, \
+                         ncol=2, mode="expand", borderaxespad=0)
+    plt.title("Credit Metrics")
+    # Plot relevant data, form the legends and title
 
-ax1.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,\
-           ncol=2, mode="expand", borderaxespad=0)
-ax2.legend(bbox_to_anchor=(0., 1.07, 1., .102), loc=6,\
-           ncol=2, mode="expand", borderaxespad=0)
-plt.title("Credit Metrics")
-# Form the legends and the title
+    fig2 = plt.figure()
+    plt.xticks(xpos, stock_list)
+    ax3 = fig2.add_subplot(111)
+    ax3.bar(xpos + 0.2, D_EBITDA, width=0.2, color='g', label="Debt To EBITDA")
+    ax3.legend(loc=1)
+    plt.title("Credit Metrics")
+    #plot debt-to-ebitda on a seperate figure
+
+else:
+    #plotting format for a non negative Debt-EBITDA
+
+    fig = plt.figure()
+    xpos = np.arange(len(stock_list))
+    plt.xticks(xpos, stock_list)
+    ax1 = fig.add_subplot(111)
+    ax2 = ax1.twinx()
+    ax1.bar(xpos, Altman_score,width = 0.2, color = 'r', label = "Altman Z-Score")
+    ax1.bar(xpos+0.2, IntCov, width = 0.2, color = 'b', label = "Interest Coverage")
+    ax2.bar(xpos-0.2, D_EBITDA, width = 0.2, color = 'g', label = "Debt To EBITDA")
+    ax2.bar(xpos-0.4, D_Asset, width = 0.2, color = 'y', label = "Debt To Asset")
+    # Create a 2 axis bar graph
+
+    low1 = min(Altman_score)
+    high1 = max(Altman_score)
+    low2 = min(D_EBITDA)
+    high2 = max(D_EBITDA)
+    ax1.set_ylim([math.ceil(low1-0.5*(high1-low1)),\
+                  math.ceil(high1+0.5*(high1-low1))])
+    # Scale the y axis
+
+    ax1.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,\
+               ncol=2, mode="expand", borderaxespad=0)
+    ax2.legend(bbox_to_anchor=(0., 1.07, 1., .102), loc=6,\
+               ncol=2, mode="expand", borderaxespad=0)
+    plt.title("Credit Metrics")
+    # Form the legends and the title
 
 plt.show()
 # and display graph
