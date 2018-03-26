@@ -27,9 +27,9 @@ DebtEBITDAScores = []
 DebtAssetScores = []
 # Initialize the lists that we will use
 
-number = int(input("How many stocks would you like to look up?"))
+number = int(input("How many stocks would you like to look up? \n"))
 for i in range(number):
-    tickers = input('Enter ticker for the stock you would like to look up')
+    tickers = input('Enter ticker for the stock you would like to look up \n')
     stock_list.append(tickers)
 # Get the tickers for the stocks we want
 
